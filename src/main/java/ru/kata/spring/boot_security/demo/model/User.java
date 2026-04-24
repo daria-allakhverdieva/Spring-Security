@@ -1,12 +1,9 @@
 package ru.kata.spring.boot_security.demo.model;
 
 import jakarta.persistence.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import ru.kata.spring.boot_security.demo.repository.RoleRepository;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,7 +22,7 @@ public class User implements UserDetails {
     @Column(name = "password", nullable = false, length = 100)
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),

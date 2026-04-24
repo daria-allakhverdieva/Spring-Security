@@ -2,34 +2,27 @@ package ru.kata.spring.boot_security.demo.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import ru.kata.spring.boot_security.demo.model.User;
-import ru.kata.spring.boot_security.demo.repository.UserRepository;
-import ru.kata.spring.boot_security.demo.service.UserService;
-
-import java.util.Set;
-import java.util.stream.Collectors;
+import ru.kata.spring.boot_security.demo.service.UserServiceImpl;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
     private final SuccessUserHandler successUserHandler;
+    private final UserServiceImpl userServiceImpl;
 
-    private final UserService userService;
-
-    public WebSecurityConfig(SuccessUserHandler successUserHandler, UserService userService) {
+    public WebSecurityConfig(SuccessUserHandler successUserHandler, @Lazy UserServiceImpl userServiceImpl) {
         this.successUserHandler = successUserHandler;
-        this.userService = userService;
+        this.userServiceImpl = userServiceImpl;
     }
 
     @Bean
@@ -38,7 +31,8 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/").permitAll()
-                        .requestMatchers("/admin/**", "/user/delete", "/add-user").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -49,6 +43,24 @@ public class WebSecurityConfig {
                         .permitAll()
                 );
         return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new UserDetailsService() {
+            @Override
+            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                User user = userServiceImpl
+                        .findByUsername(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User with email = " + username + " not found"));
+                return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), user.getAuthorities());
+            }
+        };
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     // аутентификация inMemory
@@ -63,25 +75,4 @@ public class WebSecurityConfig {
 //
 //        return new InMemoryUserDetailsManager(user);
 //    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return new UserDetailsService() {
-            @Override
-            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                User user = userService
-                        .findByUsername(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User with email = " + username + " not found"));
-//                Set<SimpleGrantedAuthority> roles = user.getRoles().stream()
-//                        .map(role -> new SimpleGrantedAuthority(role.getAuthority()))
-//                        .collect(Collectors.toSet());
-                return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), user.getAuthorities());
-            }
-        };
-    }
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
