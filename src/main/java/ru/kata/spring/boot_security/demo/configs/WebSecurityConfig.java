@@ -17,11 +17,9 @@ import ru.kata.spring.boot_security.demo.service.UserServiceImpl;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
-    private final SuccessUserHandler successUserHandler;
     private final UserServiceImpl userServiceImpl;
 
-    public WebSecurityConfig(SuccessUserHandler successUserHandler, @Lazy UserServiceImpl userServiceImpl) {
-        this.successUserHandler = successUserHandler;
+    public WebSecurityConfig(@Lazy UserServiceImpl userServiceImpl) {
         this.userServiceImpl = userServiceImpl;
     }
 
