@@ -29,12 +29,18 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**", "/index").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .defaultSuccessUrl("/index", true)
+                        .successHandler((request, response, authentication) -> {
+                            String redirectUrl = authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_USER"))
+                                    ? "/user"
+                                    : "/index";
+                            response.sendRedirect(redirectUrl);
+                        })
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")

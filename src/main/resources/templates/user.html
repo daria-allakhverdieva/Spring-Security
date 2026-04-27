@@ -15,7 +15,6 @@
                   th:text="${role.name + (iter.last ? '' : ', ')}">Role</span>
         </p>
     </div>
-    <a href="/index">Back to Users List</a>
 <form th:action="@{/logout}" method="post" style="display: inline; margin-left: 15px;">
     <button type="submit">Log Out</button>
 </form>
