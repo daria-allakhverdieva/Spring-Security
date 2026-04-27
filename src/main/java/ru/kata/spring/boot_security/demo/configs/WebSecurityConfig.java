@@ -38,7 +38,7 @@ public class WebSecurityConfig {
                             String redirectUrl = authentication.getAuthorities().stream()
                                     .anyMatch(a -> a.getAuthority().equals("ROLE_USER"))
                                     ? "/user"
-                                    : "/index";
+                                    : "/admin";
                             response.sendRedirect(redirectUrl);
                         })
                 )

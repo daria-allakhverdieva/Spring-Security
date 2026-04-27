@@ -20,14 +20,4 @@ public class CommonController {
     public String getWelcomePage() {
         return "welcome";
     }
-
-    @GetMapping("/index")
-    public String getHomePage(Model model, Authentication authentication) {
-        List<User> users = userServiceImpl.findAll();
-        model.addAttribute("users", users);
-        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().contains("ADMIN"));
-        model.addAttribute("isAdmin", isAdmin);
-        return "index";
-    }
 }
